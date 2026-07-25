@@ -4,7 +4,7 @@ import { useAuthStore } from '../store/useAuthStore';
 import { MessageSquare, User ,Mail, Lock, EyeOff, Eye ,Loader2} from 'lucide-react';
 import { Link } from "react-router-dom";
 
-import AuthImagePattern from '../components/authImagePattern';
+import AuthImagePattern from '../components/AuthImagePattern';
 import toast from 'react-hot-toast';
 
 const SignUpPage = () => {
