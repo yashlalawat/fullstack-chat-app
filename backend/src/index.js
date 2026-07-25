@@ -6,6 +6,7 @@ import cookieParser from "cookie-parser";
 import cors from "cors";
 
 import path from "path";
+import { fileURLToPath } from "url";
 
 import { connectDB } from "./lib/db.js";
 
@@ -17,6 +18,7 @@ dotenv.config()
 // const app = express();
 
 const PORT = process.env.PORT;
+const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.resolve();
 
 app.use(express.json());
