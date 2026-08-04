@@ -18,6 +18,19 @@ const messageSchema = new mongoose.Schema(
         image: {
             type: String,
         },
+        // Users who have hidden this message
+        deletedFor: [
+            {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
+            },
+        ],
+
+        // True when deleted for everyone
+        deletedForEveryone: {
+            type: Boolean,
+            default: false,
+        },
     },
     { timestamps: true }
 );

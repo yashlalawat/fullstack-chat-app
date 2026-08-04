@@ -13,8 +13,8 @@ export const useChatStore = create((set, get) => ({
     getUsers: async () => {
         set({ isUsersLoading: true });
         try {
-           const res = await axiosInstance.get("/messages/users");
-           set({ users: res.data }); 
+            const res = await axiosInstance.get("/messages/users");
+            set({ users: res.data });
         } catch (error) {
             toast.error(error.response.data.message);
         } finally {
@@ -22,7 +22,7 @@ export const useChatStore = create((set, get) => ({
         }
     },
 
-    getMessages: async(userId) => {
+    getMessages: async (userId) => {
         set({ isMessageLoading: true });
         try {
             const res = await axiosInstance.get(`/messages/${userId}`);
@@ -46,7 +46,7 @@ export const useChatStore = create((set, get) => ({
 
     subscribeToMessages: () => {
         const { selectedUser } = get();
-        if(!selectedUser) return ;
+        if (!selectedUser) return;
 
         const socket = useAuthStore.getState().socket;
 
@@ -58,14 +58,67 @@ export const useChatStore = create((set, get) => ({
                 messages: [...get().messages, newMessage],
             });
         });
+
+        socket.on("messageDeletedForMe", ({ messageId }) => {
+            set((state) => ({
+                messages: state.messages.filter(
+                    (m) => m._id !== messageId
+                ),
+            }));
+        });
+
+        socket.on("messageDeletedForEveryone", ({ messageId }) => {
+            set((state) => ({
+                messages: state.messages.map((m) =>
+                    m._id === messageId
+                        ? {
+                            ...m,
+                            deletedForEveryone: true,
+                        }
+                        : m
+                ),
+            }));
+        });
     },
 
     unsubscribeFromMessages: () => {
         const socket = useAuthStore.getState().socket;
         socket.off("newMessage");
+        socket.off("messageDeletedForMe");
+        socket.off("messageDeletedForEveryone");
     },
 
     //todo : optimize this one later
     setSelectedUser: (selectedUser) => set({ selectedUser }),
+
+    deleteForEveryone: async (messageId) => {
+        try {
+            await axiosInstance.patch(`/messages/delete-for-everyone/${messageId}`);
+
+            set((state) => ({
+                messages: state.messages.map((msg) =>
+                    msg._id === messageId
+                        ? { ...msg, deletedForEveryone: true }
+                        : msg
+                ),
+            }));
+        } catch (error) {
+            toast.error(error.response?.data?.message || "Failed to delete message");
+        }
+    },
+
+    deleteForMe: async (messageId) => {
+        try {
+            await axiosInstance.patch(`/messages/delete-for-me/${messageId}`);
+
+            set((state) => ({
+                messages: state.messages.filter(
+                    (msg) => msg._id !== messageId
+                ),
+            }));
+        } catch (error) {
+            toast.error(error.response?.data?.message || "Failed to delete message");
+        }
+    },
 
 }));
