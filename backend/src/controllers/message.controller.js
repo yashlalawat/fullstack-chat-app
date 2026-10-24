@@ -39,41 +39,94 @@ export const getMessages = async (req , res) => {
     }
 };
 
-export const sendMessage = async (req , res) => {
-    try {
-        const { text, image } = req.body;
-        const { id: receiverId } = req.params;
-        const senderId = req.user._id;
+export const sendMessage = async (req, res) => {
+  try {
+    const {
+      text,
+      fileData,
+      fileName,
+      fileType,
+      fileSize,
+    } = req.body;
 
-        let imageUrl;
-        if(image) {
-            //upload base64 image to cloudinary
-            const uploadResponse = await cloudinary.uploader.upload(image);
-            imageUrl = uploadResponse.secure_url;
-        }
-        //check user is uploading image
+    const { id: receiverId } = req.params;
+    const senderId = req.user._id;
 
-        const newMessage = new Message({
-            senderId,
-            receiverId,
-            text,
-            image: imageUrl,
-        });
-        //create message
-
-        await newMessage.save();
-        //save it to the database
-
-        const receiverSocketId = getReceiverSocketId(receiverId);
-        if(receiverSocketId) {
-            io.to(receiverSocketId).emit("newMessage", newMessage);
-        }
-
-        res.status(201).json(newMessage);
-    } catch (error) {
-        console.log("Error in sendMessage controller: ",error.message);
-        res.status(500).json({ error: "Internal server error " });
+    if (!text?.trim() && !fileData) {
+      return res.status(400).json({
+        message: "A message or attachment is required",
+      });
     }
+
+    // Match the frontend's 10 MB attachment limit.
+    if (fileSize && fileSize > 10 * 1024 * 1024) {
+      return res.status(413).json({
+        message: "File size must be 10 MB or less",
+      });
+    }
+
+    let imageUrl = "";
+    let fileUrl = "";
+
+    if (fileData) {
+      if (typeof fileData !== "string" ||
+          !fileData.startsWith("data:")) {
+        return res.status(400).json({
+          message: "Invalid attachment data",
+        });
+      }
+
+      const isPdf = fileType === "application/pdf";
+       const isImage = fileType?.startsWith("image/");
+
+      // Store images as image assets and documents as raw assets.
+      // Raw assets avoid applying image transformations to documents.
+      const resourceType = isImage ? "image" : "raw";
+
+      // Cloudinary detects the uploaded resource type.
+      const uploadResponse = await cloudinary.uploader.upload(
+        fileData,
+        {
+          resource_type: resourceType,
+          folder: "chat_attachments",
+          ...(fileName ? { filename_override: fileName } : {}),
+        }
+      );
+
+      if (isImage) {
+        imageUrl = uploadResponse.secure_url;
+      } else {
+        fileUrl = uploadResponse.secure_url;
+      }
+    }
+
+    const newMessage = new Message({
+      senderId,
+      receiverId,
+      text: text?.trim() || "",
+      image: imageUrl,
+      fileUrl,
+      fileName: fileName || "",
+      fileType: fileType || "",
+      fileSize: Number(fileSize) || 0,
+    });
+
+    await newMessage.save();
+
+    const receiverSocketId = getReceiverSocketId(receiverId);
+
+    if (receiverSocketId) {
+      io.to(receiverSocketId).emit("newMessage", newMessage);
+    }
+
+    return res.status(201).json(newMessage);
+  } catch (error) {
+    console.error("Error in sendMessage controller:", error);
+
+    return res.status(500).json({
+      message: "Failed to send message",
+    });
+  }
 };
 
 export const deleteForMe = async (req, res) => {

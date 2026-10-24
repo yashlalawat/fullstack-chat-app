@@ -18,11 +18,30 @@ const messageSchema = new mongoose.Schema(
         image: {
             type: String,
         },
+
+        // General file attachment support
+        fileUrl: {
+            type: String,
+            default: "",
+        },
+        fileName: {
+            type: String,
+            default: "",
+        },
+        fileType: {
+            type: String,
+            default: "",
+        },
+        fileSize: {
+            type: Number,
+            default: 0,
+        },
+
         // Users who have hidden this message
         deletedFor: [
             {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: "User",
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "User",
             },
         ],
 

@@ -33,14 +33,31 @@ export const useChatStore = create((set, get) => ({
             set({ isMessageLoading: false });
         }
     },
-
+  
     sendMessage: async (messageData) => {
-        const { selectedUser, messages } = get();
+        const { selectedUser } = get();
+
+        if (!selectedUser) {
+            throw new Error("Please select a user first");
+        }
+
         try {
-            const res = await axiosInstance.post(`/messages/send/${selectedUser._id}`, messageData);
-            set({ messages: [...messages, res.data] });
+            const res = await axiosInstance.post(
+                `/messages/send/${selectedUser._id}`,
+                messageData
+            );
+
+            set((state) => ({
+                messages: [...state.messages, res.data],
+            }));
+
+            return res.data;
         } catch (error) {
-            toast.error(error.response.data.message);
+            const message =
+                error.response?.data?.message || "Failed to send message";
+
+            toast.error(message);
+            throw error;
         }
     },
 
