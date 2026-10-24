@@ -146,48 +146,46 @@ const ChatContainer = () => {
 
                         {/* General file attachment */}
                         
-{/* General file attachment */}
-{message.fileUrl && (
-  message.fileType?.startsWith("image/") && !message.image ? (
-    <a
-      href={message.fileUrl}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="mb-2"
-    >
-      <img
-        src={message.fileUrl}
-        alt={message.fileName || "Image attachment"}
-        className="max-w-[350px] max-h-[350px] w-auto h-auto object-contain rounded-lg"
-      />
-    </a>
-  ) : (
-    <a
-      href={message.fileUrl}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="flex items-center gap-3 p-3 mb-2 rounded-lg bg-base-200 hover:opacity-80 max-w-[300px]"
-    >
-      <FileText size={28} className="shrink-0" />
+                        {message.fileUrl && (
+                          message.fileType?.startsWith("image/") && !message.image ? (
+                            <a
+                              href={message.fileUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="mb-2"
+                            >
+                              <img
+                                src={message.fileUrl}
+                                alt={message.fileName || "Image attachment"}
+                                className="max-w-[350px] max-h-[350px] w-auto h-auto object-contain rounded-lg"
+                              />
+                            </a>
+                          ) : (
+                            <a
+                              href={message.fileUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-3 p-3 mb-2 rounded-lg bg-base-200 hover:opacity-80 max-w-[300px]"
+                            >
+                              <FileText size={28} className="shrink-0" />
 
-      <div className="flex-1 min-w-0">
-        <p className="font-medium text-sm truncate">
-          {message.fileName || "Download attachment"}
-        </p>
+                              <div className="flex-1 min-w-0">
+                                <p className="font-medium text-sm truncate">
+                                  {message.fileName || "Download attachment"}
+                                </p>
 
-        <p className="text-xs opacity-60">
-          {message.fileType || "File"}
-          {message.fileSize
-            ? ` • ${(message.fileSize / 1024).toFixed(1)} KB`
-            : ""}
-        </p>
-      </div>
+                                <p className="text-xs opacity-60">
+                                  {message.fileType || "File"}
+                                  {message.fileSize
+                                    ? ` • ${(message.fileSize / 1024).toFixed(1)} KB`
+                                    : ""}
+                                </p>
+                              </div>
 
-      <Download size={18} className="shrink-0" />
-    </a>
-  )
-)}
-
+                              <Download size={18} className="shrink-0" />
+                            </a>
+                          )
+                        )}
 
                         {/* Text message */}
                         {message.text && <span>{message.text}</span>}
