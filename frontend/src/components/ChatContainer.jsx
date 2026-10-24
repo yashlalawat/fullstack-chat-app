@@ -94,7 +94,7 @@ const ChatContainer = () => {
 
               {/* Existing message */}
               <div
-                className={`chat ${
+                className={`chat w-full min-w-0 ${
                   message.senderId === authUser._id
                     ? "chat-end"
                     : "chat-start"
@@ -120,7 +120,7 @@ const ChatContainer = () => {
                 </div>
 
                 <div className="relative group">
-                  <div className="chat-bubble flex flex-col">
+                  <div className="chat-bubble flex flex-col min-w-0 max-w-full overflow-hidden">
                     {message.deletedForEveryone ? (
                       <span className="italic text-gray-400">
                         This message was deleted
@@ -139,7 +139,7 @@ const ChatContainer = () => {
                             <img
                               src={message.image}
                               alt="Image attachment"
-                              className="max-w-[350px] max-h-[350px] w-auto h-auto object-contain rounded-lg"
+                              className="block max-w-[350px] max-h-[350px] w-auto h-auto object-contain rounded-lg"
                             />
                           </a>
                         )}
@@ -157,7 +157,7 @@ const ChatContainer = () => {
                               <img
                                 src={message.fileUrl}
                                 alt={message.fileName || "Image attachment"}
-                                className="max-w-[350px] max-h-[350px] w-auto h-auto object-contain rounded-lg"
+                                className="block max-w-full max-h-[350px] w-auto h-auto object-contain rounded-lg"
                               />
                             </a>
                           ) : (
