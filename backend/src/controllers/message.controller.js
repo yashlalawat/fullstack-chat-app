@@ -25,14 +25,11 @@ export const getMessages = async (req , res) => {
 
         const messages = await Message.find({
             $or: [
-                { senderId: myId , receiverId: userToChatId },
-                { senderId: userToChatId, receiverId: myId},
+                { senderId: myId, receiverId: userToChatId },
+                { senderId: userToChatId, receiverId: myId }
             ],
-            deletedFor: {
-                $ne: req.user._id,
-            },
-
-            deletedForEveryone: false,
+            deletedForEveryone: { $ne: true },
+            deletedFor: { $nin: [myId] }
         });
 
         res.status(200).json(messages);
@@ -82,94 +79,40 @@ export const sendMessage = async (req , res) => {
 export const deleteForMe = async (req, res) => {
   try {
     const { id } = req.params;
+    const userId = req.user._id;
 
-    const message = await Message.findById(id);
+    const message = await Message.findByIdAndUpdate(
+      id,
+      { $addToSet: { deletedFor: userId } },
+      { new: true }
+    );
 
     if (!message) {
-      return res.status(404).json({ error: "Message not found" });
+      return res.status(404).json({ message: "Message not found" });
     }
 
-    await Message.findByIdAndUpdate(id, {
-      $addToSet: {
-        deletedFor: req.user._id,
-      },
-    });
-
-    const mySocketId = getReceiverSocketId(req.user._id.toString());
-
-    if (mySocketId) {
-      io.to(mySocketId).emit("messageDeletedForMe", {
-        messageId: id,
-      });
-    }
-
-    res.status(200).json({
-      success: true,
-    });
-
+    res.status(200).json({ message: "Message hidden successfully" });
   } catch (error) {
-    console.log(error);
-    res.status(500).json({
-      error: "Internal server error",
-    });
+    res.status(500).json({ message: error.message });
   }
 };
 
 export const deleteForEveryone = async (req, res) => {
   try {
-
     const { id } = req.params;
 
-    const message = await Message.findById(id);
+    const message = await Message.findByIdAndUpdate(
+      id,
+      { $set: { deletedForEveryone: true } },
+      { new: true }
+    );
 
     if (!message) {
-      return res.status(404).json({
-        error: "Message not found",
-      });
+      return res.status(404).json({ message: "Message not found" });
     }
 
-    // Only sender can delete for everyone
-    if (
-      message.senderId.toString() !== req.user._id.toString()
-    ) {
-      return res.status(403).json({
-        error: "Unauthorized",
-      });
-    }
-
-    message.deletedForEveryone = true;
-
-    await message.save();
-
-    const senderSocket = getReceiverSocketId(
-      message.senderId.toString()
-    );
-
-    const receiverSocket = getReceiverSocketId(
-      message.receiverId.toString()
-    );
-
-    if (senderSocket) {
-      io.to(senderSocket).emit("messageDeletedForEveryone", {
-        messageId: id,
-      });
-    }
-
-    if (receiverSocket) {
-      io.to(receiverSocket).emit("messageDeletedForEveryone", {
-        messageId: id,
-      });
-    }
-
-    res.status(200).json({
-      success: true,
-    });
-
+    res.status(200).json({ message: "Message hidden for everyone" });
   } catch (error) {
-    console.log(error);
-
-    res.status(500).json({
-      error: "Internal server error",
-    });
+    res.status(500).json({ message: error.message });
   }
 };
